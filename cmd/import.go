@@ -99,6 +99,6 @@ func importSchemas(db *tidbHandler, dbName, table, dir string) error {
 func importStats(db *tidbHandler, dbName, table, dir string) error {
 	statsPath := statsPath(dbName, table, dir)
 	mysql.RegisterLocalFile(statsPath)
-	fmt.Printf("import schemas from %v successfully\n", statsPath)
+	fmt.Printf("import stats from %v successfully\n", statsPath)
 	return db.execute(fmt.Sprintf("load stats '%v'", statsPath))
 }

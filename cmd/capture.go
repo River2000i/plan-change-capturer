@@ -3,13 +3,12 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"strings"
-
 	"github.com/pingcap/parser"
 	"github.com/qw4990/plan-change-capturer/plan"
 	"github.com/spf13/cobra"
+	"io/ioutil"
+	"os"
+	"strings"
 )
 
 type captureOpt struct {
@@ -64,35 +63,33 @@ func newCaptureCmd() *cobra.Command {
 func runCaptureOfflineMode(opt *captureOpt) error {
 	var db1, db2 *tidbHandler
 	var err error
-	if opt.db1.addr != "" {
-		db1, err = connectDB(opt.db1, opt.DB)
-		if err != nil {
-			return fmt.Errorf("connect to DB1 error: %v", err)
-		}
-	} else {
-		db1, err = startAndConnectDB(opt.db1, opt.DB)
-		if err != nil {
-			return fmt.Errorf("start and connect to DB1 error: %v", err)
-		}
-		defer db1.stop()
+	db1, err = startDB(opt.db1)
+	if err != nil {
+		return fmt.Errorf("start and connect to DB1 error: %v", err)
 	}
+	defer db1.stop()
 
-	if opt.db2.addr != "" {
-		db2, err = connectDB(opt.db2, opt.DB)
-		if err != nil {
-			return fmt.Errorf("connect to DB2 error: %v", err)
-		}
-	} else {
-		db2, err = startAndConnectDB(opt.db2, opt.DB)
-		if err != nil {
-			return fmt.Errorf("start and connect to DB2 error: %v", err)
-		}
-		defer db2.stop()
+	db2, err = startDB(opt.db2)
+	if err != nil {
+		return fmt.Errorf("start and connect to DB2 error: %v", err)
 	}
+	defer db2.stop()
 
+	if err := importSchemaStats(db1, "", opt.schemaDir); err != nil {
+		return fmt.Errorf("import schema and stats into DB1 error: %v", err)
+	}
 	if err := importSchemaStats(db2, "", opt.schemaDir); err != nil {
 		return fmt.Errorf("import schema and stats into DB2 error: %v", err)
 	}
+	db1, err = connectDB(opt.db1, opt.DB)
+	if err != nil {
+		return fmt.Errorf("connect to DB1 error: %v", err)
+	}
+	db2, err = connectDB(opt.db2, opt.DB)
+	if err != nil {
+		return fmt.Errorf("connect to DB2 error: %v", err)
+	}
+
 	sqls, err := scanQueryFile(opt.queryFile)
 	if err != nil {
 		return err
