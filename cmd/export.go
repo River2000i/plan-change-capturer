@@ -60,6 +60,7 @@ func newExportCmd() *cobra.Command {
 }
 
 func runExportStmtSummary(opt *exportOpt) error {
+	fmt.Printf("stmt_summary~~~~~~~~")
 	db, err := connectDB(opt.db, "information_schema")
 	if err != nil {
 		return fmt.Errorf("connect to DB error: %v", err)
@@ -82,7 +83,7 @@ func runExportStmtSummary(opt *exportOpt) error {
 func exportQueriesFromStmtSummary(db *tidbHandler, specDB, dstFile string) error {
 	query := `SELECT SCHEMA_NAME, QUERY_SAMPLE_TEXT FROM information_schema.cluster_statements_summary_history WHERE lower(QUERY_SAMPLE_TEXT) LIKE '%select%' and SCHEMA_NAME != 'NULL'`
 	if specDB != "" {
-		query = `SELECT SCHEMA_NAME, QUERY_SAMPLE_TEXT FROM information_schema.cluster_statements_summary_history WHERE SCHEMA_NAME != NULL and lower(QUERY_SAMPLE_TEXT) LIKE '%select%' AND SCHEMA_NAME='` + specDB + `'`
+		query = `SELECT SCHEMA_NAME, QUERY_SAMPLE_TEXT FROM information_schema.cluster_statements_summary_history WHERE SCHEMA_NAME != 'NULL' and lower(QUERY_SAMPLE_TEXT) LIKE '%select%' AND SCHEMA_NAME='` + specDB + `'`
 	}
 
 	rows, err := db.db.Query(query)
